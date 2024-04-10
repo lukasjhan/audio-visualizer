@@ -5,7 +5,8 @@ import { AudioManager } from '@/utils/audio';
 
 function drawAudioWaveform(
   context: CanvasRenderingContext2D,
-  audioBuffer: AudioBuffer
+  audioBuffer: AudioBuffer,
+  time: number
 ) {
   const canvas = context.canvas;
   const width = canvas.width;
@@ -32,6 +33,14 @@ function drawAudioWaveform(
   }
 
   context.stroke();
+
+  const duration = audioBuffer.duration;
+  const line = (time / duration) * canvas.width;
+  context.strokeStyle = 'red';
+  context.beginPath();
+  context.moveTo(line, 0);
+  context.lineTo(line, canvas.height);
+  context.stroke();
 }
 
 export function HelloWorld() {
@@ -39,6 +48,7 @@ export function HelloWorld() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [isPlaying, setIsPlaying] = useState<boolean>(false);
   const audioManager = useRef(new AudioManager());
+  const [resetCount, updateResetCount] = useState<number>(0);
 
   useEffect(() => {
     const fetchAudioData = async () => {
@@ -54,11 +64,36 @@ export function HelloWorld() {
 
       // Canvas에 오디오 시각화 그리기
       // 예를 들어, 오디오 파형을 그릴 수 있습니다.
-      drawAudioWaveform(context, audioBuffer);
+      drawAudioWaveform(context, audioBuffer, 0);
     };
 
     fetchAudioData();
   }, []);
+
+  useEffect(() => {
+    console.log('change');
+    let animationFrameId: number;
+
+    const draw = () => {
+      const canvas = canvasRef.current;
+      const audioBuffer = audioManager.current.buffer;
+      if (canvas && audioBuffer) {
+        const context = canvas.getContext('2d');
+        if (context) {
+          // 기존의 시각화 그리기
+          const currentTime = audioManager.current.getCurrentTime();
+          drawAudioWaveform(context, audioBuffer, currentTime);
+        }
+      }
+      animationFrameId = requestAnimationFrame(draw);
+    };
+
+    draw();
+
+    return () => {
+      cancelAnimationFrame(animationFrameId);
+    };
+  }, [isPlaying, resetCount]);
 
   const handlePlayPause = () => {
     if (isPlaying) {
@@ -73,11 +108,12 @@ export function HelloWorld() {
     audioManager.current.pause();
     audioManager.current.reset();
     setIsPlaying(false);
+    updateResetCount((prev) => prev + 1);
   };
 
   return (
     <div>
-      <canvas ref={canvasRef} width="800" height="400" />
+      <canvas ref={canvasRef} width="1400" height="400" />
       <div
         style={{
           display: 'flex',

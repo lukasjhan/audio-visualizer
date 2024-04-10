@@ -23,6 +23,7 @@ export class AudioManager {
   }
 
   private setupSource(): void {
+    this.audioContext = new AudioContext();
     if (this.source) {
       this.source.disconnect();
     }
@@ -31,7 +32,8 @@ export class AudioManager {
       this.source.buffer = this.buffer;
     }
     this.source.connect(this.audioContext.destination);
-    this.source.start();
+    this.source.start(0, 0);
+    this.audioContext.suspend();
   }
 
   play(): void {
@@ -60,9 +62,11 @@ export class AudioManager {
 
   reset(): void {
     if (this.isPlaying || this.audioContext.state === 'suspended') {
-      this.source!.stop();
       this.setupSource(); // 초기 상태로 source 노드 재설정
-      this.isPlaying = false;
     }
+  }
+
+  getCurrentTime(): number {
+    return this.audioContext.currentTime;
   }
 }
