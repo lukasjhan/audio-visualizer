@@ -86,15 +86,17 @@ export function HelloWorld() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const canvas2Ref = useRef<HTMLCanvasElement>(null);
   const [isPlaying, setIsPlaying] = useState<boolean>(false);
-  const audioManager = useRef(new AudioManager());
   const [resetCount, updateResetCount] = useState<number>(0);
-  const [volume, setVolume] = useState(audioManager.current.volume);
+  const [audioManager, setAudioManger] = useState<AudioManager | null>(null);
+  const [volume, setVolume] = useState(5);
 
   useEffect(() => {
     const fetchAudioData = async () => {
-      await audioManager.current.load('/api/audio');
-      const audioContext = audioManager.current.audioContext;
-      const audioBuffer = audioManager.current.buffer;
+      const audioManager = new AudioManager();
+      setAudioManger(audioManager);
+      await audioManager.load('/api/audio');
+      const audioContext = audioManager.audioContext;
+      const audioBuffer = audioManager.buffer;
       if (!audioContext || !audioBuffer) return;
 
       const canvas = canvasRef.current;
@@ -113,11 +115,12 @@ export function HelloWorld() {
 
     const draw = () => {
       const canvas = canvasRef.current;
-      const audioBuffer = audioManager.current.buffer;
+      if (!audioManager) return;
+      const audioBuffer = audioManager.buffer;
       if (canvas && audioBuffer) {
         const context = canvas.getContext('2d');
         if (context) {
-          const currentTime = audioManager.current.getCurrentTime();
+          const currentTime = audioManager.getCurrentTime();
           drawAudioWaveform(context, audioBuffer, currentTime);
         }
       }
@@ -129,20 +132,22 @@ export function HelloWorld() {
     return () => {
       cancelAnimationFrame(animationFrameId);
     };
-  }, [isPlaying, resetCount]);
+  }, [audioManager, isPlaying, resetCount]);
 
   const handlePlayPause = () => {
+    if (!audioManager) return;
     if (isPlaying) {
-      audioManager.current.pause();
+      audioManager.pause();
     } else {
-      audioManager.current.resume();
+      audioManager.resume();
     }
     setIsPlaying(!isPlaying);
   };
 
   const handleReset = () => {
-    audioManager.current.pause();
-    audioManager.current.reset();
+    if (!audioManager) return;
+    audioManager.pause();
+    audioManager.reset();
     setIsPlaying(false);
     updateResetCount((prev) => prev + 1);
   };
@@ -151,6 +156,7 @@ export function HelloWorld() {
     let animationFrameId: number;
 
     const drawFrequencyBars = () => {
+      if (!audioManager) return;
       const canvas = canvas2Ref.current;
       if (!canvas) return;
       const context = canvas.getContext('2d');
@@ -158,8 +164,8 @@ export function HelloWorld() {
 
       const width = canvas.width;
       const height = canvas.height;
-      const dataArray = audioManager.current.dataArray;
-      const analyser = audioManager.current.analyser;
+      const dataArray = audioManager.dataArray;
+      const analyser = audioManager.analyser;
       if (!dataArray || !analyser) return;
       const barWidth = (width / dataArray.length) * 1.5;
       let barHeight;
@@ -189,16 +195,18 @@ export function HelloWorld() {
     return () => {
       cancelAnimationFrame(animationFrameId);
     };
-  }, [isPlaying, resetCount]);
+  }, [audioManager, isPlaying, resetCount]);
 
   const increaseVolume = () => {
-    audioManager.current.setVolume(volume + 1);
-    setVolume(audioManager.current.volume);
+    if (!audioManager) return;
+    audioManager.setVolume(volume + 1);
+    setVolume(audioManager.volume);
   };
 
   const decreaseVolume = () => {
-    audioManager.current.setVolume(volume - 1);
-    setVolume(audioManager.current.volume);
+    if (!audioManager) return;
+    audioManager.setVolume(volume - 1);
+    setVolume(audioManager.volume);
   };
 
   return (
