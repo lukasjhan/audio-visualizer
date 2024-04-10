@@ -21,14 +21,35 @@ function drawAudioWaveform(
   const height = canvas.height;
   const channelData = audioBuffer.getChannelData(0); // 첫 번째 채널 데이터 사용
   const step = Math.ceil(channelData.length / width); // 오디오 데이터를 캔버스 너비에 맞게 줄이기 위한 단계
+  const duration = audioBuffer.duration;
 
   context.clearRect(0, 0, width, height); // 캔버스 지우기
   context.beginPath();
-  context.strokeStyle = 'white';
   context.lineWidth = 1;
 
+  context.strokeStyle = 'red';
+  const currentTimePosition = (time / duration) * width;
+
   let x = 0;
-  for (let i = 0; i < channelData.length; i += step) {
+  let i = 0;
+  for (i = 0; i < channelData.length; i += step) {
+    const y = ((1 + channelData[i]) * height) / 2; // 오디오 데이터를 캔버스 높이에 맞게 조정
+
+    if (i === 0) {
+      context.moveTo(x, y);
+    } else {
+      context.lineTo(x, y);
+    }
+
+    x += width / (channelData.length / step); // 캔버스 너비에 맞게 x 좌표 증가
+    if (x > currentTimePosition) break;
+  }
+
+  context.stroke();
+  context.beginPath();
+
+  context.strokeStyle = 'white';
+  for (i; i < channelData.length; i += step) {
     const y = ((1 + channelData[i]) * height) / 2; // 오디오 데이터를 캔버스 높이에 맞게 조정
 
     if (i === 0) {
@@ -39,10 +60,8 @@ function drawAudioWaveform(
 
     x += width / (channelData.length / step); // 캔버스 너비에 맞게 x 좌표 증가
   }
-
   context.stroke();
 
-  const duration = audioBuffer.duration;
   const line = (time / duration) * canvas.width;
   context.strokeStyle = 'red';
   context.lineWidth = 3;
