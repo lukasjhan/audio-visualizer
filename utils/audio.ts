@@ -56,7 +56,7 @@ export class AudioManager {
 
   play(): void {
     if (!this.isPlaying && this.buffer) {
-      this.setupSource(); // 항상 새 source 노드를 생성해야 합니다.
+      this.setupSource();
       this.source!.start(0);
       this.isPlaying = true;
     }
@@ -80,7 +80,7 @@ export class AudioManager {
 
   reset(): void {
     if (this.isPlaying || this.audioContext.state === 'suspended') {
-      this.setupSource(); // 초기 상태로 source 노드 재설정
+      this.setupSource();
     }
   }
 
@@ -91,9 +91,7 @@ export class AudioManager {
   setVolume(level: number) {
     if (!this.gainNode) return;
 
-    // 볼륨 레벨을 1~10 사이로 제한
     this.volume = Math.min(Math.max(level, 1), 10);
-    // GainNode의 gain 값을 설정하여 볼륨 조정
     this.gainNode.gain.value = this.volume / 10;
   }
 }

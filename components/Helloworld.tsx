@@ -19,11 +19,11 @@ function drawAudioWaveform(
   const canvas = context.canvas;
   const width = canvas.width;
   const height = canvas.height;
-  const channelData = audioBuffer.getChannelData(0); // 첫 번째 채널 데이터 사용
-  const step = Math.ceil(channelData.length / width); // 오디오 데이터를 캔버스 너비에 맞게 줄이기 위한 단계
+  const channelData = audioBuffer.getChannelData(0);
+  const step = Math.ceil(channelData.length / width);
   const duration = audioBuffer.duration;
 
-  context.clearRect(0, 0, width, height); // 캔버스 지우기
+  context.clearRect(0, 0, width, height);
   context.beginPath();
   context.lineWidth = 1;
 
@@ -33,7 +33,7 @@ function drawAudioWaveform(
   let x = 0;
   let i = 0;
   for (i = 0; i < channelData.length; i += step) {
-    const y = ((1 + channelData[i]) * height) / 2; // 오디오 데이터를 캔버스 높이에 맞게 조정
+    const y = ((1 + channelData[i]) * height) / 2;
 
     if (i === 0) {
       context.moveTo(x, y);
@@ -41,7 +41,7 @@ function drawAudioWaveform(
       context.lineTo(x, y);
     }
 
-    x += width / (channelData.length / step); // 캔버스 너비에 맞게 x 좌표 증가
+    x += width / (channelData.length / step);
     if (x > currentTimePosition) break;
   }
 
@@ -50,7 +50,7 @@ function drawAudioWaveform(
 
   context.strokeStyle = 'white';
   for (i; i < channelData.length; i += step) {
-    const y = ((1 + channelData[i]) * height) / 2; // 오디오 데이터를 캔버스 높이에 맞게 조정
+    const y = ((1 + channelData[i]) * height) / 2;
 
     if (i === 0) {
       context.moveTo(x, y);
@@ -58,7 +58,7 @@ function drawAudioWaveform(
       context.lineTo(x, y);
     }
 
-    x += width / (channelData.length / step); // 캔버스 너비에 맞게 x 좌표 증가
+    x += width / (channelData.length / step);
   }
   context.stroke();
 
@@ -83,7 +83,6 @@ function drawAudioWaveform(
 }
 
 export function HelloWorld() {
-  const audioRef = useRef<HTMLAudioElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const canvas2Ref = useRef<HTMLCanvasElement>(null);
   const [isPlaying, setIsPlaying] = useState<boolean>(false);
@@ -103,8 +102,6 @@ export function HelloWorld() {
       const context = canvas.getContext('2d');
       if (!context) return;
 
-      // Canvas에 오디오 시각화 그리기
-      // 예를 들어, 오디오 파형을 그릴 수 있습니다.
       drawAudioWaveform(context, audioBuffer, 0);
     };
 
@@ -120,7 +117,6 @@ export function HelloWorld() {
       if (canvas && audioBuffer) {
         const context = canvas.getContext('2d');
         if (context) {
-          // 기존의 시각화 그리기
           const currentTime = audioManager.current.getCurrentTime();
           drawAudioWaveform(context, audioBuffer, currentTime);
         }
