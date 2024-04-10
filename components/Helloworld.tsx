@@ -1,12 +1,12 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
+import { AudioManager } from '@/utils/audio';
 
 function drawAudioWaveform(
   context: CanvasRenderingContext2D,
   audioBuffer: AudioBuffer
 ) {
-  console.log('draw');
   const canvas = context.canvas;
   const width = canvas.width;
   const height = canvas.height;
@@ -37,24 +37,15 @@ function drawAudioWaveform(
 export function HelloWorld() {
   const audioRef = useRef<HTMLAudioElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const [audioContext, setAudioContext] = useState<AudioContext | null>(null);
   const [isPlaying, setIsPlaying] = useState<boolean>(false);
+  const audioManager = useRef(new AudioManager());
 
   useEffect(() => {
     const fetchAudioData = async () => {
-      const response = await fetch('/api/audio');
-      const audioBlob = await response.blob();
-
-      // 오디오 데이터 처리 및 시각화 로직 구현
-      const audioContext = new AudioContext();
-      const audioBuffer = await audioContext.decodeAudioData(
-        await audioBlob.arrayBuffer()
-      );
-      const source = audioContext.createBufferSource();
-      source.buffer = audioBuffer;
-      source.connect(audioContext.destination);
-
-      setAudioContext(audioContext);
+      await audioManager.current.load('/api/audio');
+      const audioContext = audioManager.current.audioContext;
+      const audioBuffer = audioManager.current.buffer;
+      if (!audioContext || !audioBuffer) return;
 
       const canvas = canvasRef.current;
       if (!canvas) return;
@@ -70,26 +61,36 @@ export function HelloWorld() {
   }, []);
 
   const handlePlayPause = () => {
-    if (audioContext === null) return;
     if (isPlaying) {
-      audioContext.suspend();
+      audioManager.current.pause();
     } else {
-      audioContext.resume();
+      audioManager.current.resume();
     }
     setIsPlaying(!isPlaying);
   };
 
   const handleReset = () => {
-    if (audioContext === null) return;
-    audioContext.suspend();
+    audioManager.current.pause();
+    audioManager.current.reset();
     setIsPlaying(false);
   };
 
   return (
     <div>
       <canvas ref={canvasRef} width="800" height="400" />
-      <button onClick={handlePlayPause}>{isPlaying ? 'Pause' : 'Play'}</button>
-      <button onClick={handleReset}>Reset</button>
+      <div
+        style={{
+          display: 'flex',
+          justifyContent: 'center',
+          gap: '1rem',
+          marginTop: '1rem',
+        }}
+      >
+        <button onClick={handlePlayPause}>
+          {isPlaying ? 'Pause' : 'Play'}
+        </button>
+        <button onClick={handleReset}>Reset</button>
+      </div>
     </div>
   );
 }

@@ -1,3 +1,5 @@
+'use client';
+
 export class AudioManager {
   public audioContext: AudioContext;
   public source: AudioBufferSourceNode | null;
@@ -29,6 +31,7 @@ export class AudioManager {
       this.source.buffer = this.buffer;
     }
     this.source.connect(this.audioContext.destination);
+    this.source.start();
   }
 
   play(): void {
