@@ -7,6 +7,8 @@ export class AudioManager {
   public isPlaying: boolean;
   public analyser: AnalyserNode | null;
   public dataArray: Uint8Array | null;
+  public volume: number;
+  public gainNode: GainNode | null;
 
   constructor() {
     this.audioContext = new AudioContext();
@@ -15,6 +17,9 @@ export class AudioManager {
     this.analyser = null;
     this.dataArray = null;
     this.isPlaying = false;
+
+    this.volume = 5;
+    this.gainNode = null;
   }
 
   async load(url: string): Promise<void> {
@@ -35,14 +40,17 @@ export class AudioManager {
     if (this.buffer) {
       this.source.buffer = this.buffer;
     }
-    this.source.connect(this.audioContext.destination);
     this.source.start(0, 0);
     this.audioContext.suspend();
 
     this.analyser = this.audioContext.createAnalyser();
     this.analyser.fftSize = 256;
     this.dataArray = new Uint8Array(this.analyser.frequencyBinCount);
-    this.source.connect(this.analyser);
+
+    this.gainNode = this.audioContext.createGain();
+
+    this.source.connect(this.gainNode);
+    this.gainNode.connect(this.analyser);
     this.analyser.connect(this.audioContext.destination);
   }
 
@@ -78,5 +86,14 @@ export class AudioManager {
 
   getCurrentTime(): number {
     return this.audioContext.currentTime;
+  }
+
+  setVolume(level: number) {
+    if (!this.gainNode) return;
+
+    // 볼륨 레벨을 1~10 사이로 제한
+    this.volume = Math.min(Math.max(level, 1), 10);
+    // GainNode의 gain 값을 설정하여 볼륨 조정
+    this.gainNode.gain.value = this.volume / 10;
   }
 }

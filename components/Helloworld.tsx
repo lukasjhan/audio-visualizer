@@ -89,6 +89,7 @@ export function HelloWorld() {
   const [isPlaying, setIsPlaying] = useState<boolean>(false);
   const audioManager = useRef(new AudioManager());
   const [resetCount, updateResetCount] = useState<number>(0);
+  const [volume, setVolume] = useState(audioManager.current.volume);
 
   useEffect(() => {
     const fetchAudioData = async () => {
@@ -176,7 +177,12 @@ export function HelloWorld() {
         barHeight = dataArray[i];
 
         context.fillStyle = 'rgb(' + (barHeight + 120) + ',50,50)';
-        context.fillRect(x, height - barHeight / 2, barWidth, barHeight / 2);
+        context.fillRect(
+          x,
+          height - barHeight * 0.6,
+          barWidth,
+          barHeight * 0.6
+        );
 
         x += barWidth + 1;
       }
@@ -188,6 +194,16 @@ export function HelloWorld() {
       cancelAnimationFrame(animationFrameId);
     };
   }, [isPlaying, resetCount]);
+
+  const increaseVolume = () => {
+    audioManager.current.setVolume(volume + 1);
+    setVolume(audioManager.current.volume);
+  };
+
+  const decreaseVolume = () => {
+    audioManager.current.setVolume(volume - 1);
+    setVolume(audioManager.current.volume);
+  };
 
   return (
     <div>
@@ -216,6 +232,9 @@ export function HelloWorld() {
           {isPlaying ? 'Pause' : 'Play'}
         </button>
         <button onClick={handleReset}>Reset</button>
+        <button onClick={decreaseVolume}>-</button>
+        <span> {`[${volume}]`} </span>
+        <button onClick={increaseVolume}>+</button>
       </div>
     </div>
   );
