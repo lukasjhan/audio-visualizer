@@ -3,6 +3,14 @@
 import { useEffect, useRef, useState } from 'react';
 import { AudioManager } from '@/utils/audio';
 
+function formatTime(time: number) {
+  const minutes = Math.floor(time / 60);
+  const seconds = Math.floor(time % 60);
+  return `${minutes.toString().padStart(2, '0')}:${seconds
+    .toString()
+    .padStart(2, '0')}`;
+}
+
 function drawAudioWaveform(
   context: CanvasRenderingContext2D,
   audioBuffer: AudioBuffer,
@@ -37,10 +45,22 @@ function drawAudioWaveform(
   const duration = audioBuffer.duration;
   const line = (time / duration) * canvas.width;
   context.strokeStyle = 'red';
+  context.lineWidth = 3;
   context.beginPath();
   context.moveTo(line, 0);
   context.lineTo(line, canvas.height);
   context.stroke();
+  context.lineWidth = 1;
+
+  const currentTimeString = formatTime(time);
+  context.fillStyle = 'red';
+  context.font = '16px Arial';
+  context.fillText(currentTimeString, line + 45, 15); // 선의 바로 옆에 시간 표시
+
+  const totalTimeString = formatTime(duration);
+  context.fillStyle = 'white'; // 총 시간을 흰색으로 설정
+  context.textAlign = 'right'; // 텍스트를 오른쪽 정렬
+  context.fillText(totalTimeString, width - 10, 15); // 캔버스의 오른쪽 상단에 위치
 }
 
 export function HelloWorld() {
@@ -71,7 +91,6 @@ export function HelloWorld() {
   }, []);
 
   useEffect(() => {
-    console.log('change');
     let animationFrameId: number;
 
     const draw = () => {
@@ -113,7 +132,15 @@ export function HelloWorld() {
 
   return (
     <div>
-      <canvas ref={canvasRef} width="1400" height="400" />
+      <div
+        style={{
+          padding: '30px',
+          border: '1px solid grey',
+        }}
+      >
+        <canvas ref={canvasRef} width="1400" height="400" />
+      </div>
+
       <div
         style={{
           display: 'flex',
