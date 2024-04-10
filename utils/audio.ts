@@ -5,11 +5,15 @@ export class AudioManager {
   public source: AudioBufferSourceNode | null;
   public buffer: AudioBuffer | null;
   public isPlaying: boolean;
+  public analyser: AnalyserNode | null;
+  public dataArray: Uint8Array | null;
 
   constructor() {
     this.audioContext = new AudioContext();
     this.source = null;
     this.buffer = null;
+    this.analyser = null;
+    this.dataArray = null;
     this.isPlaying = false;
   }
 
@@ -34,6 +38,12 @@ export class AudioManager {
     this.source.connect(this.audioContext.destination);
     this.source.start(0, 0);
     this.audioContext.suspend();
+
+    this.analyser = this.audioContext.createAnalyser();
+    this.analyser.fftSize = 256;
+    this.dataArray = new Uint8Array(this.analyser.frequencyBinCount);
+    this.source.connect(this.analyser);
+    this.analyser.connect(this.audioContext.destination);
   }
 
   play(): void {

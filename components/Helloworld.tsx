@@ -85,6 +85,7 @@ function drawAudioWaveform(
 export function HelloWorld() {
   const audioRef = useRef<HTMLAudioElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const canvas2Ref = useRef<HTMLCanvasElement>(null);
   const [isPlaying, setIsPlaying] = useState<boolean>(false);
   const audioManager = useRef(new AudioManager());
   const [resetCount, updateResetCount] = useState<number>(0);
@@ -149,15 +150,58 @@ export function HelloWorld() {
     updateResetCount((prev) => prev + 1);
   };
 
+  useEffect(() => {
+    let animationFrameId: number;
+
+    const drawFrequencyBars = () => {
+      const canvas = canvas2Ref.current;
+      if (!canvas) return;
+      const context = canvas.getContext('2d');
+      if (!context) return;
+
+      const width = canvas.width;
+      const height = canvas.height;
+      const dataArray = audioManager.current.dataArray;
+      const analyser = audioManager.current.analyser;
+      if (!dataArray || !analyser) return;
+      const barWidth = (width / dataArray.length) * 1.5;
+      let barHeight;
+      let x = 0;
+
+      context.clearRect(0, 0, width, height);
+
+      analyser.getByteFrequencyData(dataArray);
+
+      for (let i = 0; i < dataArray.length; i++) {
+        barHeight = dataArray[i];
+
+        context.fillStyle = 'rgb(' + (barHeight + 120) + ',50,50)';
+        context.fillRect(x, height - barHeight / 2, barWidth, barHeight / 2);
+
+        x += barWidth + 1;
+      }
+
+      animationFrameId = requestAnimationFrame(drawFrequencyBars);
+    };
+    drawFrequencyBars();
+    return () => {
+      cancelAnimationFrame(animationFrameId);
+    };
+  }, [isPlaying, resetCount]);
+
   return (
     <div>
       <div
         style={{
           padding: '30px',
           border: '1px solid grey',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '2rem',
         }}
       >
         <canvas ref={canvasRef} width="1400" height="400" />
+        <canvas ref={canvas2Ref} width="1400" height="200" />
       </div>
 
       <div
