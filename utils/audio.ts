@@ -25,6 +25,7 @@ export class AudioManager {
   async load(url: string): Promise<void> {
     const response = await fetch(url);
     const audioBlob = await response.blob();
+    // blob = arraybuffer + type string(audio/mpeg3)
     this.buffer = await this.audioContext.decodeAudioData(
       await audioBlob.arrayBuffer()
     );
@@ -43,10 +44,14 @@ export class AudioManager {
     this.source.start(0, 0);
     this.audioContext.suspend();
 
+    // 오디오의 크기를 분석하는 노드.
+    // fftSize는 분석하는 데이터의 크기를 나타냄
+    // dataArray에다가 정보를 갱신한다.
     this.analyser = this.audioContext.createAnalyser();
     this.analyser.fftSize = 256;
     this.dataArray = new Uint8Array(this.analyser.frequencyBinCount);
 
+    // 오디오의 크기를 담당하는 노드.
     this.gainNode = this.audioContext.createGain();
 
     this.source.connect(this.gainNode);
